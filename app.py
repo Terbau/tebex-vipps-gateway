@@ -10,7 +10,7 @@ from sanic_cors import CORS
 BASE = 'https://api.vipps.no'
 TEBEX_BASE = 'https://plugin.buycraft.net'
 
-with open('users.json', 'r') as f:
+with open('config.json', 'r') as f:
     raw = json.loads(f.read())
     API_BASE = raw['api_base']
 
