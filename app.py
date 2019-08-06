@@ -183,8 +183,7 @@ async def init_payment(request):
     res = await user.init_payment(
         order_id,
         tebex_payment['amount'].replace('.', ''),
-        f'Betaling til {user.tebex_information["account"]["name"]}.',
-        phone_number=48059749
+        f'Betaling til {user.tebex_information["account"]["name"]}.'
     )
 
     return response.json(
