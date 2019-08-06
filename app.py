@@ -5,6 +5,7 @@ import json
 
 from sanic import Sanic
 from sanic import response
+from sanic.exceptions import NotFound
 from sanic_cors import CORS
 
 BASE = 'https://api.vipps.no'
@@ -240,6 +241,10 @@ async def purchase_redirect(request, client_id, order_id):
     if res is True:
         return response.redirect(f"{user.tebex_information['account']['domain']}/checkout/complete")
     return response.redirect(f"{user.tebex_information['account']['domain']}/checkout/error")
+
+@app.exception(NotFound)
+async def ingore_404(request, exception):
+    return response.json({'error_message': 'Requested URL not found.'}, status=404)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000)
