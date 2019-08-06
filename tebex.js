@@ -1,5 +1,5 @@
 // change to your vipps client id
-const CLIENT_ID = 'db45c60e-3c17-4510-9e1f-a95116c92ca0';
+const CLIENT_ID = '';
 const API_BASE = '';
 
 (async () => {

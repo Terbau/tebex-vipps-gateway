@@ -29,6 +29,8 @@ class User:
         self.subscription_key = data['subscription_key']
         self.merchant_serial_number = data['merchant_serial_number']
         self.tebex_secret = data['tebex_secret']
+        
+        self.order_processing_futures = {}
 
     async def fetch_access_token(self, future=None):
         headers = {
@@ -41,7 +43,7 @@ class User:
             if r.status != 200:
                 text = await r.text()
                 if future is not None:
-                    return future.set_exeption(
+                    return future.set_exception(
                         TypeError(
                             f'Something went wrong with {self.email}. API resp: {text}')
                     )
@@ -141,6 +143,38 @@ class User:
         ) as r:
             return r.status == 204
 
+    async def process_order(self, order_id):
+        if order_id not in self.order_processing_futures.keys():
+            self.order_processing_futures[order_id] = self.app.loop.create_future()
+        
+        val = False
+        status = await self.fetch_vipps_payment_status(order_id)
+        if status['transactionInfo']['status'] == 'RESERVE':
+            res = await self.confirm_tebex_payment(order_id)
+            if res is True:
+                val = True
+
+        self.order_processing_futures[order_id].set_result(val)
+        self.app.loop.create_task(self.delete_after(order_id, seconds=10))
+
+    async def await_order_processing(self, order_id):
+        if order_id not in self.order_processing_futures.keys():
+            self.order_processing_futures[order_id] = self.app.loop.create_future()
+
+        result = False
+        try:
+            result = await asyncio.wait_for(self.order_processing_futures[order_id], timeout=5)
+        except asyncio.TimeoutError:
+            pass
+
+        return result
+
+    async def delete_after(self, order_id, seconds):
+        await asyncio.sleep(seconds)
+        try:
+            del self.order_processing_futures[order_id]
+        except KeyError:
+            pass
 
 @app.listener('before_server_start')
 async def before_server_start(app, loop):
@@ -193,17 +227,18 @@ async def init_payment(request):
 
 @app.route(f'/<client_id>/v2/payments/<order_id>', methods=['POST'])
 async def purchase_callback(request, client_id, order_id):
+    user = app.users[client_id]
+    await user.process_order(order_id)
+
     return response.text('', status=204)
 
 @app.route(f'/<client_id>/<order_id>/redirect', methods=['GET'])
 async def purchase_redirect(request, client_id, order_id):
     user = app.users[client_id]
 
-    status = await user.fetch_vipps_payment_status(order_id)
-    if status['transactionInfo']['status'] == 'RESERVE':
-        res = await user.confirm_tebex_payment(order_id)
-        if res is True:
-            return response.redirect(f"{user.tebex_information['account']['domain']}/checkout/complete")
+    res = await user.await_order_processing(order_id)
+    if res is True:
+        return response.redirect(f"{user.tebex_information['account']['domain']}/checkout/complete")
     return response.redirect(f"{user.tebex_information['account']['domain']}/checkout/error")
 
 if __name__ == "__main__":
