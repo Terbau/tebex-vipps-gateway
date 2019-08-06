@@ -1,0 +1,12 @@
+{
+    "api_base": "",
+    "users": {
+        "user@email.com": {
+            "client_id": "",
+            "client_secret": "",
+            "subscription_key": "",
+            "merchant_serial_number": "",
+            "tebex_secret": ""
+        }
+    }
+}
