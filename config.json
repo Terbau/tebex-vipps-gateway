@@ -1,5 +1,6 @@
 {
     "api_base": "",
+    "robots_path": "",
     "users": {
         "user@email.com": {
             "client_id": "",
