@@ -243,7 +243,7 @@ async def purchase_redirect(request, client_id, order_id):
     return response.redirect(f"{user.tebex_information['account']['domain']}/checkout/error")
 
 @app.route('/robots.txt', methods=['GET'])
-async def robots(self, request):
+async def robots(request):
     return response.file(raw['robots_path'])
 
 @app.exception(NotFound)
