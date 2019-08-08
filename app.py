@@ -244,7 +244,7 @@ async def purchase_redirect(request, client_id, order_id):
 
 @app.route('/robots.txt', methods=['GET'])
 async def robots(request):
-    return response.file(raw['robots_path'])
+    return await response.file(raw['robots_path'])
 
 @app.exception(NotFound)
 async def ingore_404(request, exception):
