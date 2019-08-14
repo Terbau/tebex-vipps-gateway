@@ -144,6 +144,28 @@ class User:
         ) as r:
             return r.status == 204
 
+    async def capture_vipps_payment(self, order_id):
+        async with self.app.client_session.post(
+            'f{BASE}/ecomm/v2/payments/{order_id}/capture',
+            headers={
+                'orderId': order_id,
+                'Authorization': f'Bearer {self.access_token}',
+                'Ocp-Apim-Subscription-Key': self.subscription_key
+            },
+            json={
+                "merchantInfo": {
+                    "merchantSerialNumber": self.merchant_serial_number
+                },
+                "transaction": {
+                    "amount": 0,
+                    "transactionText": f'Ditt kjøp hos {self.tebex_information["account"]["name"]} er nå fullført.'
+                }
+            }
+        ) as r:
+            if r.status != 200:
+                print(f'Could not capture order {order_id} for provider {self.tebex_information["account"]["name"]}')
+            
+
     async def process_order(self, order_id):
         if order_id not in self.order_processing_futures.keys():
             self.order_processing_futures[order_id] = self.app.loop.create_future()
@@ -238,6 +260,9 @@ async def purchase_redirect(request, client_id, order_id):
     user = app.users[client_id]
 
     res = await user.await_order_processing(order_id)
+
+    app.loop.create_task(user.capture_vipps_payment(order_id))
+
     if res is True:
         return response.redirect(f"{user.tebex_information['account']['domain']}/checkout/complete")
     return response.redirect(f"{user.tebex_information['account']['domain']}/checkout/error")
