@@ -15,6 +15,10 @@ with open('config.json', 'r') as f:
     raw = json.loads(f.read())
     API_BASE = raw['api_base']
 
+test_environment_enabled = (raw.get('test_environment', {})).get('enabled', False)
+if test_environment_enabled:
+    BASE = 'https://apitest.vipps.no'
+
 app = Sanic()
 CORS(app, automatic_options=True)
 
@@ -205,7 +209,10 @@ async def before_server_start(app, loop):
 
     tasks = []
     users = {}
-    for email, data in raw['users'].items():
+
+    raw_users = raw['users'] if test_environment_enabled is False else raw['test_environment']['users']
+
+    for email, data in raw_users.items():
         user = User(app, email, data)
         users[user.client_id] = user
 

@@ -1,6 +1,18 @@
 {
     "api_base": "",
     "robots_path": "",
+    "test_environment": {
+        "enabled": false,
+        "users": {
+            "user@gmail.com": {
+                "client_id": "",
+                "client_secret": "",
+                "subscription_key": "",
+                "merchant_serial_number": "",
+                "tebex_secret": ""
+            }
+        }
+    },
     "users": {
         "user@email.com": {
             "client_id": "",
