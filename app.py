@@ -146,7 +146,7 @@ class User:
 
     async def capture_vipps_payment(self, order_id):
         async with self.app.client_session.post(
-            'f{BASE}/ecomm/v2/payments/{order_id}/capture',
+            f'{BASE}/ecomm/v2/payments/{order_id}/capture',
             headers={
                 'orderId': order_id,
                 'Authorization': f'Bearer {self.access_token}',
